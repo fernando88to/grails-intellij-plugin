@@ -424,6 +424,39 @@
         icon="org.jetbrains.plugins.grails.GroovyMvcIcons.Grails_test"/>
     </group>
 
+    <!-- keyboard entry points for the editor toolbar popup groups above;
+         the descriptor does not support keyboard-shortcut on group elements -->
+    <action
+      id="grails.goto.domain.shortcut"
+      class="org.jetbrains.plugins.grails.editor.toolbar.GoToDomainShortcutAction"
+      icon="AllIcons.Nodes.DataTables">
+      <keyboard-shortcut keymap="$default" first-keystroke="alt NUMPAD1"/>
+    </action>
+    <action
+      id="grails.goto.controller.shortcut"
+      class="org.jetbrains.plugins.grails.editor.toolbar.GoToControllerShortcutAction"
+      icon="AllIcons.Nodes.Controller">
+      <keyboard-shortcut keymap="$default" first-keystroke="alt NUMPAD2"/>
+    </action>
+    <action
+      id="grails.goto.service.shortcut"
+      class="org.jetbrains.plugins.grails.editor.toolbar.GoToServiceShortcutAction"
+      icon="AllIcons.FileTypes.Config">
+      <keyboard-shortcut keymap="$default" first-keystroke="alt NUMPAD3"/>
+    </action>
+    <action
+      id="grails.goto.view.shortcut"
+      class="org.jetbrains.plugins.grails.editor.toolbar.GoToViewShortcutAction"
+      icon="org.jetbrains.plugins.grails.GroovyMvcIcons.Gsp_logo">
+      <keyboard-shortcut keymap="$default" first-keystroke="alt NUMPAD4"/>
+    </action>
+    <action
+      id="grails.goto.test.shortcut"
+      class="org.jetbrains.plugins.grails.editor.toolbar.GoToTestShortcutAction"
+      icon="org.jetbrains.plugins.grails.GroovyMvcIcons.Grails_test">
+      <keyboard-shortcut keymap="$default" first-keystroke="alt NUMPAD5"/>
+    </action>
+
     <group id="Grails" class="org.jetbrains.plugins.grails.actions.GrailsActionGroup"
            icon="org.jetbrains.plugins.grails.GroovyMvcIcons.Grails">
       <action
