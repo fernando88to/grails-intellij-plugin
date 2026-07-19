@@ -33,7 +33,11 @@ abstract class GrailsGoToArtefactActionBase(private val artefactType: GrailsArti
 
   override fun getNavigateTargets(artefactData: ArtefactData): MutableCollection<GrClassDefinition> = artefactType.getInstances(
       artefactData.module, artefactData.packageName, artefactData.artefactName
-  )
+  ).ifEmpty {
+    // artefacts are not required to share the package of the current file (e.g. domain classes
+    // in a "domain" package vs controllers in a "controller" package), so retry without the filter
+    artefactType.getInstances(artefactData.module, null, artefactData.artefactName)
+  }
 
 
   @ActionText override fun getNavigateTitle(target: PsiClass): String =
