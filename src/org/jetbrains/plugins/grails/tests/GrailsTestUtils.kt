@@ -16,22 +16,29 @@
 
 package org.jetbrains.plugins.grails.tests
 
-import com.intellij.openapi.module.ModuleUtil
 import com.intellij.openapi.util.text.StringUtil
-import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.PsiClass
-import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.search.GlobalSearchScopesCore
+import com.intellij.psi.search.PsiShortNamesCache
 import org.jetbrains.plugins.grails.structure.GrailsApplication
 
+/**
+ * Collects the tests of a Grails 3+ artefact. Tests are matched by short name only:
+ * they are not required to live in the artefact's package, and any of the
+ * [GrailsTestUtils.TEST_SUFFIXES] is accepted, so that projects separating unit from
+ * integration tests by suffix (`FooServiceSpec` vs `FooServiceIntegrationSpec`) are covered.
+ */
 fun getTestsForArtifact(application: GrailsApplication, artefact: PsiClass, result: MutableCollection<in PsiClass>): Unit {
-  val module = ModuleUtil.findModuleForPsiElement(artefact) ?: return
+  val shortName = StringUtil.getShortName(artefact.qualifiedName ?: return)
+  val project = application.project
 
-  val qualifiedName = artefact.qualifiedName ?: return
-  val packageName = StringUtil.getPackageName(qualifiedName)
-  val shortName = StringUtil.getShortName(qualifiedName)
-  val unitTestFqn = StringUtil.getQualifiedName(packageName, shortName + "Spec")
+  // the application scope unites the "test" and "integrationTest" source sets, which the
+  // Gradle import exposes as separate modules; the project test scope is the same fallback
+  // GrailsUtils.isInGrailsTests uses when the source sets cannot be resolved
+  val scope = application.getScope(false, true).uniteWith(GlobalSearchScopesCore.projectTestScope(project))
+  val shortNamesCache = PsiShortNamesCache.getInstance(project)
 
-  val scope = GlobalSearchScope.moduleWithDependentsScope(module)
-  val clazz = JavaPsiFacade.getInstance(application.project).findClass(unitTestFqn, scope) ?: return
-  result.add(clazz)
+  for (suffix in GrailsTestUtils.TEST_SUFFIXES) {
+    result.addAll(shortNamesCache.getClassesByName(shortName + suffix, scope))
+  }
 }

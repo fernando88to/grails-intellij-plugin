@@ -38,6 +38,7 @@ Esta branch do git chamada `custom` é uma versão customizada com as seguintes 
 - Na barra superior de navegação entre os artefatos de um domínio, antes a pesquisa do domínio/controller/service/view e test exigia que eles estivessem no mesmo pacote; agora basta que tenham o mesmo nome.
 - Ainda nessa barra superior de navegação, foram introduzidos atalhos com `Alt+1` (numérico) para ir para domínios, `Alt+2` (numérico) para ir para controllers, e assim por diante para service, view e test.
 - Novo botão **Data Service** na barra de navegação, com atalho `Alt+6` (numérico): pesquisa como o service, mas pelo sufixo `DataService`. Por exemplo, a partir do domínio `OrgaoJudiciario` ele localiza `OrgaoJudiciarioDataService`.
+- O botão **Tests** passou a localizar os testes apenas pelo nome da classe, sem exigir o mesmo pacote, e aceita todos os sufixos de teste conhecidos (`Spec`, `IntegrationSpec`, `Test`, `UnitSpec` etc.) em projetos Grails 3+, e não só `Spec`. Isso cobre projetos que separam testes unitários dos de integração pelo sufixo.
 
 ## Links
 

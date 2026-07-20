@@ -129,14 +129,20 @@ class GoToTestAction : GrailsToolbarVfileAction() {
     val result = mutableListOf<VirtualFile>()
 
     for (artefactType in DECORATED_ARTEFACT_TYPES) {
-      for (artifact in artefactType.getInstances(artefactData.module, artefactData.packageName, artefactData.artefactName)) {
+      val artefacts = artefactType.getInstances(
+        artefactData.module, artefactData.packageName, artefactData.artefactName
+      ).ifEmpty {
+        // the artefacts of a name need not share a package, so retry without the filter
+        artefactType.getInstances(artefactData.module, null, artefactData.artefactName)
+      }
+      for (artifact in artefacts) {
         for (testClass in GrailsTestUtils.getTestsForArtifact(artifact, true)) {
           ContainerUtil.addIfNotNull(result, testClass.containingFile.virtualFile)
         }
       }
     }
 
-    return result
+    return result.distinct()
   }
 
   override fun createGenerateActions(artefactData: ArtefactData): Collection<AnAction> = artefactData.artefactName.capitalize().let {

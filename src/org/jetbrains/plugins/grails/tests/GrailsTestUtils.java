@@ -67,11 +67,11 @@ public final class GrailsTestUtils {
   public static final Collection<String> TEST_ANNOTATIONS =
     List.of(TEST_FOR, TEST_MIXIN, MOCK, GrailsBuildTestDataMemberProvider.BUILD_ANNOTATION);
 
-  private static final String[] TEST_SUFFIXES = {
+  public static final List<String> TEST_SUFFIXES = List.of(
     "Test", "Tests", "Spec", "Specification",
     "UnitTest", "UnitTests", "UnitSpec", "UnitSpecification",
-    "IntegrationTest", "IntegrationTests", "IntegrationSpec", "IntegrationSpecification",
-  };
+    "IntegrationTest", "IntegrationTests", "IntegrationSpec", "IntegrationSpecification"
+  );
 
   private GrailsTestUtils() { }
 
