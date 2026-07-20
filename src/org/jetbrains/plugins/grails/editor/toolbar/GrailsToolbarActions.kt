@@ -33,6 +33,7 @@ import org.jetbrains.plugins.grails.editor.GenerateTestsAction
 import org.jetbrains.plugins.grails.tests.GrailsTestUtils
 import org.jetbrains.plugins.grails.util.GrailsArtifact
 import org.jetbrains.plugins.grails.util.GrailsUtils
+import org.jetbrains.plugins.groovy.lang.psi.api.statements.typedef.GrClassDefinition
 
 class GoToDomainAction : GrailsGoToArtefactActionBase(GrailsArtifact.DOMAIN) {
   override fun createGenerateActions(artefactData: ArtefactData): List<AnAction> = listOf(
@@ -44,6 +45,34 @@ class GoToServiceAction : GrailsGoToArtefactActionBase(GrailsArtifact.SERVICE) {
   override fun createGenerateActions(artefactData: ArtefactData): List<AnAction> = listOf(
     ActionManager.getInstance().getAction("Grails.Service")
   )
+}
+
+/**
+ * Navigates to services following the `<Artefact>DataService` naming convention.
+ * [GrailsArtifact.SERVICE] indexes `OrgaoJudiciarioDataService` under the artefact
+ * name `orgaoJudiciarioData`, so the lookup only has to append [DATA_INFIX].
+ */
+class GoToDataServiceAction : GrailsGoToArtefactActionBase(GrailsArtifact.SERVICE) {
+
+  @NlsSafe override fun getTitle(artefactData: ArtefactData): String =
+    dataArtefactName(artefactData).capitalize() + GrailsArtifact.SERVICE.suffix
+
+  override fun getNavigateTargets(artefactData: ArtefactData): MutableCollection<GrClassDefinition> =
+    super.getNavigateTargets(withArtefactName(artefactData, dataArtefactName(artefactData)))
+
+  // already inside a data service: its artefact name carries the infix
+  private fun dataArtefactName(artefactData: ArtefactData): String = artefactData.artefactName.let {
+    if (it.endsWith(DATA_INFIX)) it else it + DATA_INFIX
+  }
+
+  private fun withArtefactName(artefactData: ArtefactData, artefactName: String) = ArtefactData(
+    artefactData.project, artefactData.module, artefactData.file, artefactData.packageName,
+    artefactName, artefactData.application, artefactData.isView
+  )
+
+  private companion object {
+    const val DATA_INFIX = "Data"
+  }
 }
 
 class GoToControllerAction : GrailsGoToArtefactActionBase(GrailsArtifact.CONTROLLER) {

@@ -59,5 +59,6 @@ abstract class GrailsToolbarShortcutAction(private val groupId: String) : AnActi
 class GoToDomainShortcutAction : GrailsToolbarShortcutAction("grails.goto.domain")
 class GoToControllerShortcutAction : GrailsToolbarShortcutAction("grails.goto.controller")
 class GoToServiceShortcutAction : GrailsToolbarShortcutAction("grails.goto.service")
+class GoToDataServiceShortcutAction : GrailsToolbarShortcutAction("grails.goto.dataservice")
 class GoToViewShortcutAction : GrailsToolbarShortcutAction("grails.goto.view")
 class GoToTestShortcutAction : GrailsToolbarShortcutAction("grails.goto.test")

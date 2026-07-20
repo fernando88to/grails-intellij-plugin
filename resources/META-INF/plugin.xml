@@ -415,6 +415,10 @@
         class="org.jetbrains.plugins.grails.editor.toolbar.GoToServiceAction"
         icon="AllIcons.FileTypes.Config"/>
       <group
+        id="grails.goto.dataservice"
+        class="org.jetbrains.plugins.grails.editor.toolbar.GoToDataServiceAction"
+        icon="AllIcons.Nodes.Models"/>
+      <group
         id="grails.goto.view"
         class="org.jetbrains.plugins.grails.editor.toolbar.GoToViewAction"
         icon="org.jetbrains.plugins.grails.GroovyMvcIcons.Gsp_logo"/>
@@ -455,6 +459,12 @@
       class="org.jetbrains.plugins.grails.editor.toolbar.GoToTestShortcutAction"
       icon="org.jetbrains.plugins.grails.GroovyMvcIcons.Grails_test">
       <keyboard-shortcut keymap="$default" first-keystroke="alt NUMPAD5"/>
+    </action>
+    <action
+      id="grails.goto.dataservice.shortcut"
+      class="org.jetbrains.plugins.grails.editor.toolbar.GoToDataServiceShortcutAction"
+      icon="AllIcons.Nodes.Models">
+      <keyboard-shortcut keymap="$default" first-keystroke="alt NUMPAD6"/>
     </action>
 
     <group id="Grails" class="org.jetbrains.plugins.grails.actions.GrailsActionGroup"
