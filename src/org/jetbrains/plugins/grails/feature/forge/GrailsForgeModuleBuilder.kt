@@ -64,7 +64,7 @@ internal class GrailsForgeModuleBuilder : WebStarterModuleBuilder() {
   override fun getBuilderId(): String = "grails-6"
   override fun getNodeIcon(): Icon = GroovyMvcIcons.Grails
   @Suppress("HardCodedStringLiteral")
-  override fun getPresentableName(): String = "Grails Application Forge"
+  override fun getPresentableName(): String = "Grails"
   @Suppress("HardCodedStringLiteral")
   override fun getDescription(): String = "Grails"
   override fun isShowProjectTypes(): Boolean = false
@@ -233,7 +233,7 @@ internal class GrailsForgeModuleBuilder : WebStarterModuleBuilder() {
   }
 
   private fun getServletType(): ServletType {
-    return starterContext.getUserData(SERVLET_KEY) ?: ServletType.JETTY
+    return starterContext.getUserData(SERVLET_KEY) ?: ServletType.TOMCAT
   }
 
   private fun setGormType(gormType: GormType) {
@@ -255,7 +255,7 @@ internal class GrailsForgeModuleBuilder : WebStarterModuleBuilder() {
             .bind(servletProperty)
         }.bottomGap(BottomGap.SMALL)
 
-        setServletType(ServletType.JETTY)
+        setServletType(servletProperty.get())
         servletProperty.afterChange { setServletType(it) }
 
         layout.row(GrailsBundle.message("module.builder.gorm.type")) {

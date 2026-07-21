@@ -18,6 +18,7 @@ package org.jetbrains.plugins.grails.util;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.ModuleUtilCore;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootManager;
@@ -63,7 +64,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -309,8 +313,7 @@ public enum GrailsArtifact {
 
     ProjectFileIndex fileIndex = ProjectRootManager.getInstance(module.getProject()).getFileIndex();
 
-    Set<Module> modules = new HashSet<>();
-    ModuleUtilCore.getDependencies(module, modules);
+    Set<Module> modules = getRelatedModules(module);
 
     for (Module m : modules) {
       if (GrailsFramework.isCommonPluginsModule(m)) {
@@ -329,20 +332,55 @@ public enum GrailsArtifact {
         if (directory != null) {
           calculateInstancesInDirectory(directory, res, fileIndex);
         }
-        collectFromPluginXmls(module, res);
       }
     }
 
+    // Grails plugin descriptors are resolved against the module's whole dependency+libraries scope,
+    // so this must run once for the module - not once per dependency, which would add every declared
+    // artefact as many times as there are modules in the dependency graph (duplicate navigate targets).
+    collectFromPluginXmls(module, res);
+
     return res;
+  }
+
+  /**
+   * The set of modules that share artefacts/views with {@code module} in a multi-project build:
+   * {@code module} itself, its (transitive) dependencies, and the modules that (transitively) depend
+   * on it. Used both for artefact instance discovery and for cross-module "Go To View" navigation.
+   */
+  public static @NotNull Set<Module> getRelatedModules(@NotNull Module module) {
+    Set<Module> modules = new HashSet<>();
+    ModuleUtilCore.getDependencies(module, modules); // module + its (transitive) dependencies
+    collectDependentModules(module, modules);        // + modules that (transitively) depend on it
+    return modules;
+  }
+
+  /**
+   * Adds every module that (transitively) depends on {@code module} to {@code result}. This lets a
+   * "Go To ..." action on an artefact in an upstream project (e.g. a shared plugin) resolve artefacts
+   * declared in downstream projects that depend on it - the reverse of {@link ModuleUtilCore#getDependencies}.
+   */
+  private static void collectDependentModules(@NotNull Module module, @NotNull Set<Module> result) {
+    ModuleManager moduleManager = ModuleManager.getInstance(module.getProject());
+    Deque<Module> queue = new ArrayDeque<>();
+    queue.add(module);
+    while (!queue.isEmpty()) {
+      for (Module dependent : moduleManager.getModuleDependentModules(queue.poll())) {
+        if (result.add(dependent)) {
+          queue.add(dependent);
+        }
+      }
+    }
   }
 
   private void collectFromPluginXmls(Module module, MultiMap<String, VirtualFile> result) {
     Project project = module.getProject();
     JavaPsiFacade facade = JavaPsiFacade.getInstance(project);
     GlobalSearchScope scope = module.getModuleWithDependenciesAndLibrariesScope(false);
-    PsiFile[] allFiles = FilenameIndex.getFilesByName(project, "grails-plugin.xml", scope);
+    PsiManager psiManager = PsiManager.getInstance(project);
     JavaDirectoryService directoryService = JavaDirectoryService.getInstance();
-    for (PsiFile file : allFiles) {
+    for (VirtualFile virtualFile : FilenameIndex.getVirtualFilesByName("grails-plugin.xml", scope)) {
+      PsiFile file = psiManager.findFile(virtualFile);
       if (!(file instanceof XmlFile)) continue;
 
       PsiDirectory directory = file.getContainingDirectory();
@@ -445,9 +483,11 @@ class GrailsArtifactCache {
       return Collections.singletonList(classDefinition);
     }
 
+    // The same artefact can be discovered through more than one path (e.g. a source directory and a
+    // grails-plugin.xml descriptor), so dedupe files to avoid duplicate navigate targets.
     List<GrClassDefinition> list = new ArrayList<>(size);
 
-    for (VirtualFile virtualFile : vfList) {
+    for (VirtualFile virtualFile : new LinkedHashSet<>(vfList)) {
       ContainerUtil.addIfNotNull(list, getClassDefinition(virtualFile));
     }
 
