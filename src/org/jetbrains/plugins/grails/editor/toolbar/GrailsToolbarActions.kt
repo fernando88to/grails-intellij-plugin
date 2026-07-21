@@ -58,7 +58,7 @@ class GoToDataServiceAction : GrailsGoToArtefactActionBase(GrailsArtifact.SERVIC
   @NlsSafe override fun getTitle(artefactData: ArtefactData): String =
     dataArtefactName(artefactData).capitalize() + GrailsArtifact.SERVICE.suffix
 
-  override fun getNavigateTargets(artefactData: ArtefactData): MutableCollection<GrClassDefinition> =
+  override fun getNavigateTargets(artefactData: ArtefactData): Collection<GrClassDefinition> =
     super.getNavigateTargets(withArtefactName(artefactData, dataArtefactName(artefactData)))
 
   // already inside a data service: its artefact name carries the infix
