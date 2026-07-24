@@ -28,15 +28,15 @@ import javax.swing.Icon
 abstract class GrailsGoToArtefactActionBase(private val artefactType: GrailsArtifact) : GrailsToolbarTargetAction<PsiClass>() {
 
   @NlsSafe override fun getTitle(artefactData: ArtefactData): String {
-    return artefactData.artefactName.capitalize() + artefactType.suffix
+    return artefactData.artefactName.replaceFirstChar { it.uppercaseChar() } + artefactType.suffix
   }
 
-  override fun getNavigateTargets(artefactData: ArtefactData): MutableCollection<GrClassDefinition> = artefactType.getInstances(
-      artefactData.module, artefactData.packageName, artefactData.artefactName
-  ).ifEmpty {
-    // artefacts are not required to share the package of the current file (e.g. domain classes
-    // in a "domain" package vs controllers in a "controller" package), so retry without the filter
-    artefactType.getInstances(artefactData.module, null, artefactData.artefactName)
+  override fun getNavigateTargets(artefactData: ArtefactData): Collection<GrClassDefinition> {
+    // Prefer an artefact in the same package as the current one, but fall back to matching by name
+    // alone: in multi-project builds a shared artefact (e.g. a domain in an upstream project) often
+    // lives in a different package than the controller/service that uses it.
+    val samePackage = artefactType.getInstances(artefactData.module, artefactData.packageName, artefactData.artefactName)
+    return samePackage.ifEmpty { artefactType.getInstances(artefactData.module, artefactData.artefactName) }
   }
 
 

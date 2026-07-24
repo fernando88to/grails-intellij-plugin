@@ -19,8 +19,8 @@ package org.jetbrains.plugins.grails.editor.toolbar
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.util.NlsActions.ActionText
+import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.util.NlsSafe
-import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiClass
 import com.intellij.util.containers.ContainerUtil
@@ -30,6 +30,7 @@ import org.jetbrains.plugins.grails.GsonConstants
 import org.jetbrains.plugins.grails.actions.ArtefactData
 import org.jetbrains.plugins.grails.editor.DECORATED_ARTEFACT_TYPES
 import org.jetbrains.plugins.grails.editor.GenerateTestsAction
+import org.jetbrains.plugins.grails.structure.GrailsApplicationManager
 import org.jetbrains.plugins.grails.tests.GrailsTestUtils
 import org.jetbrains.plugins.grails.util.GrailsArtifact
 import org.jetbrains.plugins.grails.util.GrailsUtils
@@ -57,7 +58,7 @@ class GoToDataServiceAction : GrailsGoToArtefactActionBase(GrailsArtifact.SERVIC
   @NlsSafe override fun getTitle(artefactData: ArtefactData): String =
     dataArtefactName(artefactData).capitalize() + GrailsArtifact.SERVICE.suffix
 
-  override fun getNavigateTargets(artefactData: ArtefactData): MutableCollection<GrClassDefinition> =
+  override fun getNavigateTargets(artefactData: ArtefactData): Collection<GrClassDefinition> =
     super.getNavigateTargets(withArtefactName(artefactData, dataArtefactName(artefactData)))
 
   // already inside a data service: its artefact name carries the infix
@@ -103,14 +104,28 @@ class GoToViewAction : GrailsToolbarVfileAction() {
   override fun isOpenSingle(): Boolean = false
 
   @ActionText override fun getTitle(artefactData: ArtefactData): String =
-    GrailsBundle.message("action.text.go.to.views", artefactData.artefactName.capitalize())
+    GrailsBundle.message("action.text.go.to.views", artefactData.artefactName.replaceFirstChar { it.uppercaseChar() })
 
-  override fun getNavigateTargets(artefactData: ArtefactData): Collection<VirtualFile> = VfsUtil.findRelativeFile(
-    artefactData.application.appRoot, GrailsUtils.VIEWS_DIRECTORY, artefactData.artefactName
-  )?.children?.filter {
-    val name = it.nameSequence
-    name.endsWith(".gsp") || name.endsWith(".jsp") || name.endsWith(GsonConstants.FILE_SUFFIX)
-  } ?: emptyList()
+  override fun getNavigateTargets(artefactData: ArtefactData): Collection<VirtualFile> {
+    // Views for an artefact may live in a different module than the artefact itself (multi-project
+    // build): e.g. a service in an upstream project whose views are defined by a downstream app.
+    // Search every Grails application belonging to the related-module set (the same set artefact
+    // instance discovery uses) rather than only this artefact's own application.
+    val related = GrailsArtifact.getRelatedModules(artefactData.module)
+    val fileIndex = ProjectFileIndex.getInstance(artefactData.project)
+    val result = LinkedHashSet<VirtualFile>()
+    for (application in GrailsApplicationManager.getInstance(artefactData.project).applications) {
+      if (fileIndex.getModuleForFile(application.appRoot) !in related) continue
+      val viewDir = application.appRoot
+        .findChild(GrailsUtils.VIEWS_DIRECTORY)
+        ?.findChild(artefactData.artefactName) ?: continue
+      viewDir.children?.filterTo(result) {
+        val name = it.nameSequence
+        name.endsWith(".gsp") || name.endsWith(".jsp") || name.endsWith(GsonConstants.FILE_SUFFIX)
+      }
+    }
+    return result
+  }
 
 
   override fun createGenerateActions(artefactData: ArtefactData): Collection<AnAction> = listOf(
@@ -123,7 +138,7 @@ class GoToTestAction : GrailsToolbarVfileAction() {
   override fun isOpenSingle(): Boolean = false
 
   @ActionText override fun getTitle(artefactData: ArtefactData): String =
-    GrailsBundle.message("action.text.go.to.tests", artefactData.artefactName.capitalize())
+    GrailsBundle.message("action.text.go.to.tests", artefactData.artefactName.replaceFirstChar { it.uppercaseChar() })
 
   override fun getNavigateTargets(artefactData: ArtefactData): Collection<VirtualFile> {
     val result = mutableListOf<VirtualFile>()
@@ -145,7 +160,7 @@ class GoToTestAction : GrailsToolbarVfileAction() {
     return result.distinct()
   }
 
-  override fun createGenerateActions(artefactData: ArtefactData): Collection<AnAction> = artefactData.artefactName.capitalize().let {
+  override fun createGenerateActions(artefactData: ArtefactData): Collection<AnAction> = artefactData.artefactName.replaceFirstChar { it.uppercaseChar() }.let {
     listOf(
       GenerateTestsAction(false, artefactData.artefactName, GrailsArtifact.DOMAIN).apply {
         templatePresentation.text = GrailsBundle.message("action.text.generate.tests.unit", it)
