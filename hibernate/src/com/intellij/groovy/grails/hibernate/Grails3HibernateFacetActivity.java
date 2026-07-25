@@ -54,7 +54,7 @@ import java.util.Set;
  * exposing GORM entities — was never created there. This activity fills that gap without touching the
  * Gradle-managed source roots.
  */
-final class Grails3HibernateFacetActivity implements StartupActivity {
+final class Grails3HibernateFacetActivity implements StartupActivity.DumbAware {
 
   private static final String GORM_FACET_NAME = "Gorm";
 
@@ -65,7 +65,8 @@ final class Grails3HibernateFacetActivity implements StartupActivity {
     MessageBusConnection connection = project.getMessageBus().connect();
     connection.subscribe(GrailsApplicationListener.TOPIC, () -> ensureGormFacets(project));
 
-    // Applications may already have been discovered by the time this activity runs.
+    // Applications may already have been discovered (or recomputed by GrailsStartupActivity)
+    // before this activity got a chance to subscribe above.
     ApplicationManager.getApplication().invokeLater(() -> ensureGormFacets(project), project.getDisposed());
   }
 

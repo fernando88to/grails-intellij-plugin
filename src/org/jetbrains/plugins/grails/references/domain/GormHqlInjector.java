@@ -46,10 +46,10 @@ import java.util.Set;
  * property names inside the query become real references (navigation, find usages and rename work).
  *
  * <p>This replaces the old IntelliLang XML injection which matched the synthetic
- * {@link DomainDescriptor#DOMAIN_DYNAMIC_METHOD} light methods. Those are only generated for
- * GORM below 4 (see {@link GormAstTransformationContributor}); on GORM 4+ the finder methods come
- * from the {@code GormEntity} trait and are not marked, so the XML matcher never fired. Resolving
- * the domain class directly here keeps the behaviour working across all GORM/Grails versions.
+ * {@code Gorm:DomainDescriptor:DynamicMethod} light methods. Those are only generated for GORM
+ * below 4 (see {@link GormAstTransformationContributor}); on GORM 4+ the finder methods come from
+ * the {@code GormEntity} trait and are not marked, so the XML matcher never fired. Resolving the
+ * domain class directly here keeps the behaviour working across all GORM/Grails versions.
  */
 public final class GormHqlInjector implements MultiHostInjector {
 
